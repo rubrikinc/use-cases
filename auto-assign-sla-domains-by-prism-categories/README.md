@@ -85,12 +85,12 @@ The script will then ensure that any AHV VM belonging to the *PrismCategory* wil
 
 We glady welcome contributions from the community. From updating the documentation to creating enhancements and fixing bux, all ideas are welcome. Thank you in advance for all of your issues, pull requests, and comments! :star:
 
-* [Contributing Guide](CONTRIBUTING.md)
-* [Code of Conduct](CODE_OF_CONDUCT.md)
+* [Contributing Guide](../CONTRIBUTING.md)
+* [Code of Conduct](../CODE_OF_CONDUCT.md)
 
 ## :pushpin: License
 
-* [MIT License](LICENSE)
+* [MIT License](../LICENSE)
 
 ## :point_right: About Rubrik Build
 
