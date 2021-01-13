@@ -1,0 +1,12 @@
+{
+    "Nutanix": {
+        "PrismAddress": "192.168.10.170",
+        "PrismCredentials": "c:\\nutanix\\creds\\NutanixCreds.xml",
+        "PrismCategory": "SLADomain",
+        "AutoUpdate": "True"
+    },
+    "Rubrik": {
+        "RubrikAddress": "192.168.150.131",
+        "RubrikCredentials": "c:\\nutanix\\creds\\RubrikCreds.xml"
+    }
+}
