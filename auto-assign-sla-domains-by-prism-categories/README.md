@@ -62,7 +62,9 @@ As shown, the configuration file is split into two main sections:
   * *RubrikAddress* - refers to the IP or FQDN of the Rubrik Cluster hosting the SLA Domains
   * *RubrikCredentials* - path to credential object with appropriate access to Rubrik CDM, encrypted with the Microsoft Common Language Infrastructure (CLIXML)
 
-The configuration file must adhere to JSON standards. The file can be created manually or automatically by executing the script with no parameters `prism-category-to-sla.ps1` and following the prompts.
+The configuration file must adhere to JSON standards.
+
+***Note: The file can be created manually or automatically by executing the script with no parameters `prism-category-to-sla.ps1` and following the prompts.***
 
 If creating the file manually, you must also provide encrypted credential files to connect to both Prism and Rubrik. These can be generated with the following syntax:
 
