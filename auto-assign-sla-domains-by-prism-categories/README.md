@@ -6,7 +6,7 @@ This repository contains a PowerShell script designed to automatically assign Nu
 
 Here are some resources to get you started! If you find any challenges from this project are not properly documented or are unclear, please [raise an issue](https://github.com/rubrikinc/use-cases/issues/new/choose) and let us know! *Be sure to specify the issue is related to the Auto Assign SLA Domain by Nutanix Prism Category usecase* as their are multiple use-cases hosted from this repository.  This is a fun, safe environment - don't worry if you're a GitHub newbie! :heart:
 
-* Quick Start Guide - Coming Soon
+* [Quick Start Guide](docs/quick-start.md)
 * Getting Started Video - Coming Soon
 
 ## :white_check_mark: Prerequisites

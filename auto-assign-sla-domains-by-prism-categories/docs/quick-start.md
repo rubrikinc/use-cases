@@ -6,7 +6,7 @@ Categories are an efficient way to define groups of entities within Nutanix Pris
 
 In order to successfully execute this script, a Prism category containing values that match that of configured SLA Domains within Rubrik must first be created. From there, AHV VMs are assigned to these category values. This script will then read the assigned categories of the VMs and ensure that the VMs are assigned to the matching Rubrik SLA Domain.
 
-***Note: The script can create and manage the Nutanix Prism category for you by setting the `AutoUpdateFlag` to `True` within the configuration file***
+***Note: The script can create and manage the Nutanix Prism category for you by setting the `AutoUpdate` Flag to `True` within the configuration file***
 
 ## Prerequisites
 
