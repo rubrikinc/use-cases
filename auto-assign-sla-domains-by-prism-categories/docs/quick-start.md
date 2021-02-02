@@ -12,10 +12,10 @@ In order to successfully execute this script, a Prism category containing values
 
 There are a few services you'll need in order to get this project off the ground:
 
-* Nutanix Prism - Nutanix Prism is the management application which allows you to assign AHV VMs to categories
-* PowerShell - The script itself is written in PowerShell
-* The Rubrik PowerShell SDK - The cmdlets to retrieve and configure AHV VMs within Rubrik.
-* Rubrik CDM 4.0+ - the platform that protects provisioned workloads
+* [Nutanix Prism](https://www.nutanix.com/products/prism) - Nutanix Prism is the management application which allows you to assign AHV VMs to categories
+* [PowerShell](https://github.com/PowerShell/PowerShell) - The script itself is written in PowerShell
+* [The Rubrik PowerShell SDK](https://build.rubrik.com/sdks/powershell/) - The cmdlets to retrieve and configure AHV VMs within Rubrik.
+* [Rubrik CDM 4.0+](https://www.rubrik.com) - the platform that protects provisioned workloads
 
 ## Installation
 
