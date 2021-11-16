@@ -402,7 +402,7 @@ function New-Router() {
         $data = '{"op": "save", "path": []}'
         $r = Invoke-VyOSRestcall  -Data $data -Endpoint "config-file"
     
-        if ($network.DHCPEnabled.toUpper() -eq "TRUE") {
+        if ($network.DHCPEnabled) {
             Write-Progress -Activity "Deploying New Router: Creating DHCP Scope on $interace ($($network.DHCPScopeStart) - $($network.DHCPScopeEnd))"
             #MWP - left off here, need to destroy and try and recreate dhcp
             Write-Verbose -Message "DHCP"
@@ -579,7 +579,7 @@ function Invoke-RubrikLiveMountsAsync {
             }
 
             # Now let's add the default tests if applicable
-            if ($vm.skipPingTest -eq "True") {
+            if ($true -eq $vm.skipPingTest) {
                 $test = New-Object -TypeName PSCustomObject
                 $test | Add-Member -NotePropertyName "Name" -NotePropertyValue "Ping"
                 $test | Add-Member -NotePropertyName "Status" -NotePropertyValue "Skipped"
@@ -596,7 +596,7 @@ function Invoke-RubrikLiveMountsAsync {
             }
             $vmInfo.tests += $test
 
-            if ($vm.skipToolsTest -eq "True") {
+            if ($vm.skipToolsTest) {
                 $test = New-Object -TypeName PSCustomObject
                 $test | Add-Member -NotePropertyName "Name" -NotePropertyValue "VMwareTools"
                 $test | Add-Member -NotePropertyName "Status" -NotePropertyValue "Skipped"
