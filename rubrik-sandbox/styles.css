@@ -1,0 +1,73 @@
+table.info {
+    border-collapse: collapse;
+    font-family: Tahoma, Geneva, sans-serif;
+}
+table.info td {
+	padding: 15px;
+    font-size: 13px;
+}
+table.info th {
+	background-color: #54585d;
+	color: #ffffff;
+	font-weight: bold;
+	font-size: 13px;
+	border: 1px solid #54585d;
+    padding: 15px;
+    text-align: left;
+    
+}
+table.info td {
+	color: #636363;
+	border: 1px solid #dddfe1;
+    vertical-align: top;
+}
+table.info  tr {
+	background-color: #f9fafb;
+}
+table.info  tr:nth-child(odd) {
+	background-color: #ffffff;
+}
+
+
+
+table {
+	border-collapse: collapse;
+    font-family: Tahoma, Geneva, sans-serif;
+}
+
+table td {
+	padding: 15px;
+}
+table thead td {
+	background-color: #54585d;
+	color: #ffffff;
+	font-weight: bold;
+	font-size: 13px;
+	border: 1px solid #54585d;
+    
+}
+table tbody td {
+	color: #636363;
+	border: 1px solid #dddfe1;
+    vertical-align: top;
+    font-size: 10px;
+}
+table tbody tr {
+	background-color: #f9fafb;
+}
+table tbody tr:nth-child(odd) {
+	background-color: #ffffff;
+}
+
+.Passed {
+    color: green;
+}
+.Success {
+    color: green;
+}
+.Skipped {
+    color: black;
+}
+.Failed {
+    color: red;
+}
