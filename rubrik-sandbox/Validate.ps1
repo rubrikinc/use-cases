@@ -15,7 +15,6 @@ param(
 # Possible Restore Validation Tests to Add
 #       - Read content from file, compare to user specified string
 #       - Do wget, look for html content from website, compare to user specified string
-#       - Port Test - Allow users to specify whether it should be open/closed in order to determine success (right now just looking for open)
 #       - SQL Query - Run sql query and report on results (or compare to user specified string for pass/fail status)
 #       - Add test to call Rubrik Backup Verification API
 # Could explore the use case around mounting databases using their native Live Mount and doing some stuff as well (waaaaaay down the road)
@@ -532,7 +531,7 @@ function Invoke-RubrikLiveMountsAsync {
             # along with any other tests that rely on Tools
             # Check to see if we have an IP yet
             $mountedvmip = (Get-VM $vm.mountName).guest.IPAddress[0] 
-            
+            $vmmoid = $mountedvm.id.split("-")[2]
             if ($null -eq $mountedvmip) {
                 $round = 1
                 while ($null -eq $mountedvmip){
@@ -565,6 +564,7 @@ function Invoke-RubrikLiveMountsAsync {
                 MasqIP = ""
                 StartTime = "$starttime"
                 EndTime = ""
+                MoidLink = "vmrc://$($credcfg.Vmware.vCenterServer)/?moid=vm-$($vmmoid)"
                 Tests = @()
             })
             
@@ -757,8 +757,14 @@ function New-RestoreValidationReport {
     $report.Append("<table><thead><tr><td>VM Name</td><td>Mount Status</td><td>Start time</td><td>End time</td><td>Ping Test</td><td>Tools Test</td><td>Other Tests</td></tr></thead><tbody>")
     # Create some HTM
     foreach ($vm in $vmResults) {
-        
-        $report.Append("<tr><td>$($vm.ProductionName)</td><td class='$($vm.MountStatus)'>$($vm.MountStatus)</td>")
+        $report.Append("<tr><td>")
+        if ($appcfg.settings.leaveLabRunning) {
+            $report.Append("<a href='$($vm.MoidLink)'>$($vm.ProductionName)</a>")
+        }
+        else {
+            $report.Append("$($vm.ProductionName)")
+        }
+        $report.Append("</td><td class='$($vm.MountStatus)'>$($vm.MountStatus)</td>")
         # Get the Ping Test Results
         $pingtest = $vm.Tests | Where-Object {$_.Name -eq "Ping"}
         $toolstest =  $vm.Tests | Where-Object {$_.Name -eq "VMwareTools"}
