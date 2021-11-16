@@ -10,7 +10,6 @@ param(
 # Create helper function/script to prompt users to build out the config
 # Possibility of either offloading all these functions a functions.ps1 file and dot sourcing, or maybe creating a module (probably not, but maybe)
 # Ability to do something with the generated report, IE email
-# Ability to turn generated report on/off
 # Possible Security Related Tests to Add
 #       - PortScan and report
 # Possible Restore Validation Tests to Add
