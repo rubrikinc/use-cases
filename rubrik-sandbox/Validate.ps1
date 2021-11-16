@@ -834,7 +834,7 @@ $VMResults = Invoke-RubrikTests
 $scriptend = Get-date -Format "MM/dd/yyyy hh:mm tt"
 
 # Generate Report
-if ($appcfg.generateReport) {
+if ($appcfg.settings.generateReport) {
     $report = New-RestoreValidationReport
 }
 
