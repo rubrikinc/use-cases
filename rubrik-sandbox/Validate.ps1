@@ -501,9 +501,44 @@ function Invoke-RubrikLiveMountsAsync {
             #-=MWP=- Need to do some error checking here - as of right now it just waits for success
             # if mount fails for any reason, this script just loops forever :) whoops!
             Write-Verbose -Message "Waiting for mount status of success"
+            $attempts = 0
             while ($event.eventStatus -ne "Success"){
-                Start-Sleep -Seconds 5
+                $attempts++
+                Start-Sleep -Seconds 6
                 $event = Get-RubrikEvent -EventType Recovery -ObjectName $vm.name | Where-Object {$_.jobInstanceId -eq $mid}
+                if ($attempts -gt 20) {
+                    Write-Verbose -Message "VM Live Mount timeout"
+                    $vmInfo = (@{
+                        ProductionName="$($vm.Name)"
+                        MountName = "$($vm.mountName)"
+                        MountStatus = "Failed"
+                        Credentials = "$($vm.credentials)"
+                        IsolatedIP = "not available"
+                        MasqIP = ""
+                        StartTime = "$starttime"
+                        EndTime = ""
+                        MoidLink = ""
+                        Tests = @()
+                    })
+                    $test = New-Object -TypeName PSCustomObject
+                    $test | Add-Member -NotePropertyName "Name" -NotePropertyValue "Ping"
+                    $test | Add-Member -NotePropertyName "Status" -NotePropertyValue "Skipped"
+                    $test | Add-Member -NotePropertyName "Result" -NotePropertyValue "Skipped"
+                    $test | Add-Member -NotePropertyName "MoreInfo" -NotePropertyValue "Live Mount Failed"
+                    $test | Add-Member -NotePropertyName "ShortMore" -NotePropertyValue "Live Mount Failed"
+
+                    $vmInfo.tests += $test
+
+                  
+                    $test = New-Object -TypeName PSCustomObject
+                    $test | Add-Member -NotePropertyName "Name" -NotePropertyValue "VMwareTools"
+                    $test | Add-Member -NotePropertyName "Status" -NotePropertyValue "Skipped"
+                    $test | Add-Member -NotePropertyName "Result" -NotePropertyValue "Skipped"
+                    $test | Add-Member -NotePropertyName "MoreInfo" -NotePropertyValue "Live Mount Failed"
+                    $test | Add-Member -NotePropertyName "ShortMore" -NotePropertyValue "Live Mount Failed"
+                    $vmInfo.tests += $test
+                    return $vmInfo
+                }
             }
             # Attach VM to proper networks
             $mountedvm = Get-VM $vm.mountName
@@ -567,6 +602,10 @@ function Invoke-RubrikLiveMountsAsync {
                 MoidLink = "vmrc://$($credcfg.Vmware.vCenterServer)/?moid=vm-$($vmmoid)"
                 Tests = @()
             })
+            if ($lmstatus -eq "Failed") { 
+                $vminfo.MountStatus = "Failed"
+                
+            }
             
             foreach ($test in $vm.tasks) {
                 $test | Add-Member -NotePropertyName "Status" -NotePropertyValue "NotStarted"
@@ -642,7 +681,9 @@ function Invoke-RubrikLiveMountsAsync {
     foreach ($job in $alljobs) {
         if ($job.State -eq "Completed") {
             $vmInfo = $job | Receive-Job
-            $vmInfo.MountStatus = "Success"
+            if ($vmInfo.MountStatus -ne "Failed") {
+                $vmInfo.MountStatus = "Success"
+            }
 
         } else {
             $vmInfo = $job | Receive-Job
@@ -654,47 +695,51 @@ function Invoke-RubrikLiveMountsAsync {
     #Update Masq IP
     foreach ($vm in $vmsToTest) {
         # Figure out masquerade ip of mounted vm
-
-        if ($vm.IsolatedIP -ne "not available") {
-            $mountedvm = Get-VM $vm.MountName
-            $mountedvmip = $vm.IsolatedIP
-            $prodnet = (Get-NetworkAdapter -VM $mountedvm).NetworkName
-            $isolnet = $routercfg.IsolatedNetworks | ?{ $_.IsolatedPortGroup -eq "$prodnet"}
-            $masqsubnet = $isolnet.MasqueradeNetwork
-            $netinfo = Get-IPv4NetworkInfo -IPAddress $vm.IsolatedIP -SubnetMask $isolnet.InterfaceSubnet 
-            $octets_to_keep = ($netinfo.WildcardMask.split('.') | group | where {$_.Name -eq '0'}).Count
-            $newip = ""
-            for(($i=0); $i -lt $octets_to_keep;$i++ ) {
-                # get the octet from the prod add
-                $newip = $newip + $masqsubnet.split('.')[$i] + "."
-            }
-        
-            $i = 1
-            foreach ($octet in $mountedvmip.split('.')){
-                if ($i -gt $octets_to_keep) {
-                    $newip = $newip + $octet + "."
+        if ($vmInfo.MountStatus -eq "Success") {
+            if ($vm.IsolatedIP -ne "not available") {
+                $mountedvm = Get-VM $vm.MountName
+                $mountedvmip = $vm.IsolatedIP
+                $prodnet = (Get-NetworkAdapter -VM $mountedvm).NetworkName
+                $isolnet = $routercfg.IsolatedNetworks | ?{ $_.IsolatedPortGroup -eq "$prodnet"}
+                $masqsubnet = $isolnet.MasqueradeNetwork
+                $netinfo = Get-IPv4NetworkInfo -IPAddress $vm.IsolatedIP -SubnetMask $isolnet.InterfaceSubnet 
+                $octets_to_keep = ($netinfo.WildcardMask.split('.') | group | where {$_.Name -eq '0'}).Count
+                $newip = ""
+                for(($i=0); $i -lt $octets_to_keep;$i++ ) {
+                    # get the octet from the prod add
+                    $newip = $newip + $masqsubnet.split('.')[$i] + "."
                 }
-                $i++ 
+            
+                $i = 1
+                foreach ($octet in $mountedvmip.split('.')){
+                    if ($i -gt $octets_to_keep) {
+                        $newip = $newip + $octet + "."
+                    }
+                    $i++ 
+                }
+                $newip = $newip.Substring(0,$newip.Length-1)
+                Write-Verbose -Message "Masquerade IP address calculated as $newip"    
             }
-            $newip = $newip.Substring(0,$newip.Length-1)
-            Write-Verbose -Message "Masquerade IP address calculated as $newip"    
-        }
-        else {
-            $newip = "not available"
-        }
-        $vm.MasqIP = $newip
+            else {
+                $newip = "not available"
+            }
+            $vm.MasqIP = $newip
+            if ($newip -eq "not available"){
+                $test = $vm.tests | Where {$_.Name -eq "Ping"}
+                $test.Status = "Skipped"
+                $test.Result = "Skipped"
+                $test.ShortMore = "IP not found"
+            }
+        } 
+        
         
         # Update Ping test if no MasqIP Available
         # -=MWP=- there are others we will need to skip here (IE Port checking relies on network connectivity)
         # unless we modify that test to check, if no IP, use VMwareTools and run locally (an option)
-        if ($newip -eq "not available"){
-            $test = $vm.tests | Where {$_.Name -eq "Ping"}
-            $test.Status = "Skipped"
-            $test.Result = "Skipped"
-            $test.ShortMore = "IP not found"
-        }
+
         
     }
+    
     return [array]$vmsToTest
 }
 function Invoke-RubrikTests {
@@ -722,7 +767,8 @@ function Invoke-RubrikTests {
 
 
     }
-    return $vmsToTest
+    
+    return [array]$vmsToTest
 }
 function New-RestoreValidationReport {
     #-=MWP=- this is all still very much work in progress
@@ -788,12 +834,18 @@ function New-RestoreValidationReport {
             $report.Append("<br>$($toolstest.ShortMore)")
         }
         $report.Append("</td><td>")
-        $tests = $vm.Tests | Where {$_.Name -notin "Ping","VMwareTools"}
-        foreach ($test in $tests) {
-            $report.Append("$($test.Name) ($($test.ShortMore)): <span class='")
-            $report.Append("$($test.Result)'>$($test.Result)</span><br>")
-            
+        if ($vm.MountStatus -eq "Failed") {
+            $report.Append("Skipped All<BR>Live Mount Failed")
         }
+        else {
+            $tests = $vm.Tests | Where {$_.Name -notin "Ping","VMwareTools"}
+            foreach ($test in $tests) {
+                $report.Append("$($test.Name) ($($test.ShortMore)): <span class='")
+                $report.Append("$($test.Result)'>$($test.Result)</span><br>")
+                
+            }
+        }
+
         $report.Append("</td></tr>")
     }
     $report.Append("</tbody></table>")
@@ -835,6 +887,10 @@ if ($vmsToTest.getType().Name -ne "Object[]") {
 
 # Run tests
 $VMResults = Invoke-RubrikTests
+# Again with this single item array odd stuff#
+if ($VMResults.getType().Name -ne "Object[]") {
+   $VMResults = [array]$VMResults
+}
 
 # Get the end time
 $scriptend = Get-date -Format "MM/dd/yyyy hh:mm tt"
