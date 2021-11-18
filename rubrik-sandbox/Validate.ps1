@@ -731,13 +731,6 @@ function Invoke-RubrikLiveMountsAsync {
                 $test.ShortMore = "IP not found"
             }
         } 
-        
-        
-        # Update Ping test if no MasqIP Available
-        # -=MWP=- there are others we will need to skip here (IE Port checking relies on network connectivity)
-        # unless we modify that test to check, if no IP, use VMwareTools and run locally (an option)
-
-        
     }
     
     return [array]$vmsToTest
