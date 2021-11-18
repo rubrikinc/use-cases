@@ -21,8 +21,7 @@ param(
 # Ability for users to specify dates around what snapshots to Live Mount (especially handy when looking to simply spin up a lab for manual testing)
 # How's about some day, maybe expanding this to Hyper-V and Nutanix lol
 # Unit testing
-# Add ability to take screenshot of console - place in report
-# Add links to connect to the VMs directly in report (use the VMRC or whatever it is called)
+# Add ability to take screenshot of console - place in report - "https://vcsa.rubrik.us/screen?id=$moref"
 #
 #-=MWP=- TODO
 
