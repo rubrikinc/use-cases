@@ -36,8 +36,45 @@ $global:rbk_router_config_script = ".\rtr-ova\config-router-mgmt.sh"
 $global:rbk_router_username = "vyos"
 $global:rbk_router_password = "vyos"
 
+function Test-RouterConfig($config) {
+    # Establish Connection to vCenter
+    $viserver = Connect-VIServer -Server $global:credcfg.VMware.vCenterServer -Credential (Import-CLIXML $global:credcfg.VMware.Credentials)
+    # Ensure VMware host selected is valid
+    try { $vmhost = Get-VMHost $config.VMwareHost -ErrorAction Stop }
+    catch { throw("ESXi host ($($config.VMwareHost)) is not valid ($_)")}
+    # Make sure Datastore is accessible 
+    try { $datastore = $vmhost | Get-Datastore -Name $config.VMwareDatastore -ErrorAction Stop }
+    catch {throw ("Datastore ($($config.VMwareDatastore)) attached to $($config.VMwareHost) not found ($_)" )}
+    # Does the Management Network exist?
+    try { $vmnetwork = Get-VirtualNetwork -Name $config.ManagementNetwork -ErrorAction Stop}
+    catch {throw("Management Network ($($config.ManagementNetwork)) cannot be found ($_)")}
+    # Check that other values passed are valid IP Addresses[]
+    try { $valid = [IPAddress]$config.ManagementNetworkIP}
+    catch {throw("Management Network IP ($($config.ManagementNetworkIP)) is not valid")}
+    try { $valid = [IPAddress]$config.ManagementNetworkSubnet}
+    catch {throw("Management Network Subnet ($($config.ManagementNetworkSubnet)) is not valid")}
+    try { $valid = [IPAddress]$config.ManagementNetworkGateway}
+    catch {throw("Management Network Gateway ($($config.ManagementNetworkGateway)) is not valid")}
+    foreach ($network in $config.IsolatedNetworks) {
+        try { $vmnetwork = Get-VirtualNetwork -Name $network.ProductionNetworkName -ErrorAction Stop}
+        catch {throw("Production Network ($($network.ProductionNetworkName)) cannot be found ($_)")}
+        try { $valid = [IPAddress]$network.MasqueradeNetwork}
+        catch {throw("$($network.ProductionNetworkName) Masquerade Network ($($network.MasqueradeNetwork)) is not valid")}
+        try { $valid = [IPAddress]$network.InterfaceAddress}
+        catch {throw("$($network.ProductionNetworkName) Interface Address IP ($($network.InterfaceAddress)) is not valid")}
+        try { $valid = [IPAddress]$network.InterfaceSubnet}
+        catch {throw("$($network.ProductionNetworkName) Interface Subnet ($($network.InterfaceSubnet)) is not valid")}
+        if ($network.DHCPEnabled) {
+            try { $valid = [IPAddress]$network.DHCPNameserver}
+            catch {throw("$($network.ProductionNetworkName) DHCP Nameserver ($($network.DHCPNameserver)) is not valid")}
+            try { $valid = [IPAddress]$network.DHCPScopeStart}
+            catch {throw("$($network.ProductionNetworkName) DHCP Scope Start ($($network.DHCPScopeStart)) is not valid")}
+            try { $valid = [IPAddress]$network.DHCPScopeEnd}
+            catch {throw("$($network.ProductionNetworkName) DHCP Scope End ($($network.DHCPScopeEnd)) is not valid")}
+        }
+    }
+}
 function Get-RouterConfig($routerconfig) {
-
     if ($routerconfig -ne "") {
         # Check path of config
         if (-Not (Test-Path $routerconfig)) {
@@ -48,7 +85,8 @@ function Get-RouterConfig($routerconfig) {
             # We are good to go, load the config
             Write-Verbose -Message "Loading router configuration from $routerconfig"
             $config = Get-Content $routerconfig | ConvertFrom-Json -Depth 5
-            #-=MWP=- For the future - add in function to check validity of config file before loading
+            Test-RouterConfig($config)
+
 
             if (Test-path "$PSScriptRoot\rtr-ova\config.bak") {
                 # If we already have a backup, let's check to see if anything has changed
@@ -86,6 +124,36 @@ function Get-RouterConfig($routerconfig) {
     }
     
 }
+function Test-CredsConfig($config) {
+    # Function will throw errors if any information in configuration is not valid
+    # Check for valid files passed to those credentials that are required
+    if (-Not (Test-Path $config.VMware.Credentials)) {
+        throw ("Unable to find VMware credentials file $($config.VMware.Credentials) - Update config to a valid credentials path")
+    }
+    if (-Not (Test-Path $config.Rubrik.APIAuthToken)) {
+        throw ("Unable to find Rubrik token file $($config.Rubrik.APIAuthToken) - Update config to a valid credentials path")
+    }
+    foreach ($cred in $config.GuestCredentials) {
+        if (-Not (Test-Path $cred.Credentials)) {
+            throw ("Unable to find GuestOS Credential file for $($cred.CredentialName) at $($cred.Credentials) - Update config to a valid credentials path")
+        }
+    }
+
+    # Credential Files are valid, let's now test connection to both VMware and Rubrik
+    try {
+        $viserver = Connect-VIServer $config.VMware.vCenterServer -Credential (Import-CLIXML $config.VMware.Credentials) -ErrorAction Stop 
+    }
+    catch {
+        throw ("Unable to connect to VMware ($_)")
+    }
+    try {
+        $rubrik = Connect-Rubrik -Server $config.Rubrik.RubrikCluster -Token (Import-CLIXML $config.Rubrik.APIAuthToken) -ErrorAction Stop
+    }
+    catch {
+        throw ("Unable to connect to Rubrik ($_)")
+    }
+
+}
 function Get-CredsConfig($credentialconfig) {
     if ($credentialconfig -ne "") {
         # Check path of config
@@ -97,8 +165,8 @@ function Get-CredsConfig($credentialconfig) {
             # We are good to go, load the config
             Write-Verbose -Message "Loading credential configuration from $credentialconfig"
             $config = Get-Content $credentialconfig | ConvertFrom-Json -Depth 5
-            #-=MWP=- Add in function to check format of config file and check credentials themselves
-            # IE, make sure config file is valid (formatted properly), also, make sure that credentials supplied actually can connect to endpoints.
+            # Validate values
+            Test-CredsConfig($config)
             return $config
         }
     }
@@ -106,6 +174,21 @@ function Get-CredsConfig($credentialconfig) {
         # No config passed, for now, just exist, in the future, we will prompt to build one
         Write-Warning -Message "No credential configuruation passed or the config is invalid. I need that to function :)"
         exit
+    }
+}
+function Test-AppConfig($config) {
+   
+    $rubrik = Connect-Rubrik -Server $global:credcfg.Rubrik.RubrikCluster -Token (Import-CLIXML $global:credcfg.RUbrik.APIAuthToken)
+    foreach ($vm in $config.virtualMachines) {
+         # Check that specified VMs exist
+        if ((Get-RubrikVM -Name $vm.Name -PrimaryClusterId "local").count -eq 0) {
+            throw ("VM ($($vm.Name)) does not exist within Rubrik")
+        } 
+        # Ensure credentials are available
+        if (($global:credcfg.GuestCredentials | Where {$_.CredentialName -eq "$($vm.credentials)"}).Count -eq 0 ) {
+            throw ("Unable to find credentials in config labelled $($vm.credentials)")
+        }
+
     }
 }
 function Get-AppConfig($applicationconfig) {
@@ -119,7 +202,7 @@ function Get-AppConfig($applicationconfig) {
             # We are good to go, load the config
             Write-Verbose -Message "Loading application configuration from $applicationconfig"
             $config = Get-Content $applicationconfig | ConvertFrom-Json -Depth 5
-            #-=MWP=- Add in function to check format of config file and 
+            Test-AppConfig($config)
             return $config
         }
     }
@@ -270,8 +353,6 @@ function Invoke-VyosRestCall {
         $Data
     )
 
-    #-=MWP=- in the future, we will have the user generate the key for the body and store, or we can just generate it randomly
-    # Best not to use the same for every customer
     $body =@{}
     $body.Add("data",$Data)
     $body.Add("key","$($routercfg.RouterAPIKey)")
@@ -497,8 +578,6 @@ function Invoke-RubrikLiveMountsAsync {
             $mid = $task.id
             
             $event = Get-RubrikEvent -EventType Recovery -ObjectName $vm.name | Where-Object {$_.jobInstanceId -eq $mid}
-            #-=MWP=- Need to do some error checking here - as of right now it just waits for success
-            # if mount fails for any reason, this script just loops forever :) whoops!
             Write-Verbose -Message "Waiting for mount status of success"
             $attempts = 0
             while ($event.eventStatus -ne "Success"){
@@ -585,9 +664,6 @@ function Invoke-RubrikLiveMountsAsync {
                     $round++
                 }
             }
-            
-         
-
 
             $vmInfo = (@{
                 ProductionName="$($vm.Name)"
@@ -601,9 +677,9 @@ function Invoke-RubrikLiveMountsAsync {
                 MoidLink = "vmrc://$($credcfg.Vmware.vCenterServer)/?moid=vm-$($vmmoid)"
                 Tests = @()
             })
+
             if ($lmstatus -eq "Failed") { 
-                $vminfo.MountStatus = "Failed"
-                
+                $vminfo.MountStatus = "Failed" 
             }
             
             foreach ($test in $vm.tasks) {
@@ -748,7 +824,6 @@ function Invoke-RubrikTests {
             if ($($tests[$j].Status -ne "Skipped")) {
                 $global:testProcessing = $tests[$j]
                 Invoke-Expression "$($tests[$j].Name)"
-    
                 $tests[$j] = $global:testProcessing
             }
 
@@ -852,10 +927,9 @@ function New-RestoreValidationReport {
 # Get the start time
 $scriptstart = Get-date -Format "MM/dd/yyyy hh:mm tt"
 
-
-# Load the Router Config
-$global:routercfg = Get-RouterConfig($routerconfig)
+# Load configs into global vars
 $global:credcfg = Get-CredsConfig($credentialconfig)
+$global:routercfg = Get-RouterConfig($routerconfig)
 $global:appcfg = Get-AppConfig($applicationconfig)
 
 # Connect to vCenter
