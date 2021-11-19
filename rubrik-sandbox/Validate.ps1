@@ -119,10 +119,12 @@ function Get-RouterConfig($routerconfig) {
     else {
         # No config passed - for now let's just exit
         Write-Warning -Message "No router configuruation passed or the config is invalid. I need that to function :)"
-        # -=MWP=- In the future, we could run a seperate script/function here to actually prompt for config values and build out the config
+        Write-Warning -Message "If you need help creating the config, run confighelper.ps1"
         exit
-    }
-    
+    } 
+}
+function New-RouterConfig {
+
 }
 function Test-CredsConfig($config) {
     # Function will throw errors if any information in configuration is not valid
