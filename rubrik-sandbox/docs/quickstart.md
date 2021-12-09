@@ -4,9 +4,6 @@ The Rubrik Sandbox use-case provides the ability to automate the creation of an 
 
 Isolation is provided via a created vSphere Standard Switch and isolated portgroup. A vyOS router is deployed and configured to allow access into the isolated network via a specified masquerade network.
 
-The overall workflow of the Rubrik Sandbox Use-Case is as follows
-
-
 ## Prerequisites
 
 In order to successfully run the Rubrik Sandbox use-case there are a few services and prerequisisites you will need:
