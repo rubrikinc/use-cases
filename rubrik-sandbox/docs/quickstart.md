@@ -6,7 +6,7 @@ Isolation is provided via a created vSphere Standard Switch and isolated portgro
 
 ## Prerequisites
 
-In order to successfully run the Rubrik Sandbox use-case there are a few services and prerequisisites you will need:
+In order to successfully run the Rubrik Sandbox use-case there are a few services and prerequisites you will need:
 - [VMware vSphere](https://www.vmware.com) - As it stands, this use-case is currently only supported on VMware vSphere
 - [PowerShell](https://github.com/PowerShell/PowerShell) - This script itself is written in PowerShell
 - [The Rubrik Powershell SDK](https://build.rubrik.com/sdks/powershell/) - This provides the cmdlets to retrieve and configure the Live Mounts within Rubrik
@@ -76,7 +76,7 @@ Let's explore each attribute within the `router.config` file:
 - VMwareDatastore - The name of the vSphere datastore to host the storage for the vyOS router
 - ManagementNetwork - The name of the management network to attach the router to
 - ManagementNetworkIP - An IP address within the management network to assign to the router
-- ManagementNetworkSubnet - The assoiciated subnet mask of the management network ip address
+- ManagementNetworkSubnet - The associated subnet mask of the management network ip address
 - MangementNetworkGateway - The default gateway within the management network
 - IsolatedNetworks - This contains an array of networks which you would like to create isolated networks. You will need to include information here for each network that the virtual machines specified in `apps.config` are connected to. ***Note: At the moment, the ability to isolate the ManagementNetwork you specify above is not supported - you can only isolate networks which the router is not attached to***
   - ProductionNetworkName - The name of the production network to isolate
@@ -123,7 +123,7 @@ Let's explore each attribute within the `creds.config` file:
   - APIAuthToken - A path to an encrypted file containing the API Authentication Token for the specified Rubrik Cluster. Creation of the encrypted file can be handled by running `"<rubrik_api_token>" | Export-CLIXML <path_to_store_token>`
 - GuestCredentials - An array of various credentials used to connect to the guest operating systems being tested. There is no limit on the amount of credentials you can configure
   - CredentialName - A unique name to assign to the credential (IE DomainAdministrator)
-  - Credentials - The path to an encrypted file contiaining the desired credentials. Creation of these credentials can be handled by running `Get-Credential | Export-CLIXML <path_to_credential_file>`
+  - Credentials - The path to an encrypted file containing the desired credentials. Creation of these credentials can be handled by running `Get-Credential | Export-CLIXML <path_to_credential_file>`
 
 #### Creating the Application Configuration (apps.config) manually
 
@@ -187,7 +187,7 @@ The `apps.config` file contains all of the information around which virtual mach
 ```
 Let's explore each attribute within the `apps.config` file:
 - generateReport - Specifies whether or not you would like to generate an HTML report summarizing the results of all tasks ran.
-- reportPath - A path to where you would like to store the outputed report
+- reportPath - A path to where you would like to store the outputted report
 - leaveLabRunning - Whether or not to leave the sandbox environment running once completed.
 - emailReport - Not yet implemented
 - virtualMachines - an array of virtual machines to process
@@ -241,7 +241,7 @@ Upon execution the following will occur:
 2. The specified vCenter is scanned to see if a router with the specified name has previously been deployed.
    1. If no router has been deployed a new one will be provisioned with a default configuration
 3. The routers configuration is compared to the passed router configuration
-   1. If changes are detected the old router will be decommisioned and a new one deployed in its' place
+   1. If changes are detected the old router will be decommissioned and a new one deployed in its' place
    2. The script will then configure the router based off the values provided within the router configuration file.
 4. The isolated networks are created within vCenter
 5. Rubrik Live Mounts will be performed based off of the information provided within the application configuration
@@ -251,7 +251,7 @@ Upon execution the following will occur:
 
 ### To use the script to only create isolated sandbox labs
 
-This use-case can also be used to just create the isolated sandbox environments. This is useful if you wish to do manual work after the Rubrik Live Mounts have completed. Since the networks are completely isolated and router interfaces match that of production gateways, virtual machines within the isolated labs are unaware that they reside within an isolated network and function just as they would if they were in production. Network communication between the VMs is also possible, meaning complete environments can be tested within the isolated environments. For example, customers can Live Mount Active Directory, SQL Server, Web Servers, and Application Servers and still maintain network connectivity amongst them all. This opens up doors for many different manual testing scenarious such as:
+This use-case can also be used to just create the isolated sandbox environments. This is useful if you wish to do manual work after the Rubrik Live Mounts have completed. Since the networks are completely isolated and router interfaces match that of production gateways, virtual machines within the isolated labs are unaware that they reside within an isolated network and function just as they would if they were in production. Network communication between the VMs is also possible, meaning complete environments can be tested within the isolated environments. For example, customers can Live Mount Active Directory, SQL Server, Web Servers, and Application Servers and still maintain network connectivity amongst them all. This opens up doors for many different manual testing scenarios such as:
 * Further manual testing of the restore points
 * Penetration testing against point in time copies of their production workloads
 * Upgrade and patch testing of multi-tier applications

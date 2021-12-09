@@ -1,7 +1,7 @@
 # Rubrik Sandbox Use-Case
 This repository contains a PowerShell script designed to create isolated networks fronted by a vyOS router. Virtual machines are then live mounted into the isolated networks and various restore validation tests can be be performed against them such as ping, looking for certain running services, and checking for open or closed TCP ports.
 
-The isolated networks contain point in time copies of production services and can be accessed through a specified masqerade network, allowing IT professionals to further perform various activities within the isolated networks such as:
+The isolated networks contain point in time copies of production services and can be accessed through a specified masquerade network, allowing IT professionals to further perform various activities within the isolated networks such as:
 * Patch and Upgrade testing.
 * Penetration and Security testing
 * Triage or root-cause analysis
@@ -15,7 +15,7 @@ Here are some resources to get you started! If you find any challenges from this
 
 ## :white_check_mark: Prerequisites
 
-In order to successfully run the Rubrik Sandbox use-case there are a few services and prerequisisites you will need:
+In order to successfully run the Rubrik Sandbox use-case there are a few services and prerequisites you will need:
 - [VMware vSphere](https://www.vmware.com) - As it stands, this use-case is currently only supported on VMware vSphere
 - [PowerShell](https://github.com/PowerShell/PowerShell) - This script itself is written in PowerShell
 - [The Rubrik Powershell SDK](https://build.rubrik.com/sdks/powershell/) - This provides the cmdlets to retrieve and configure the Live Mounts within Rubrik
@@ -68,7 +68,7 @@ Let's explore each attribute within the `router.config` file:
 - VMwareDatastore - The name of the vSphere datastore to host the storage for the vyOS router
 - ManagementNetwork - The name of the management network to attach the router to
 - ManagementNetworkIP - An IP address within the management network to assign to the router
-- ManagementNetworkSubnet - The assoiciated subnet mask of the management network ip address
+- ManagementNetworkSubnet - The associated subnet mask of the management network ip address
 - MangementNetworkGateway - The default gateway within the management network
 - IsolatedNetworks - This contains an array of networks which you would like to create isolated networks. You will need to include information here for each network that the virtual machines specified in `apps.config` are connected to. ***Note: At the moment, the ability to isolate the ManagementNetwork you specify above is not supported - you can only isolate networks which the router is not attached to***
   - ProductionNetworkName - The name of the production network to isolate
@@ -115,7 +115,7 @@ Let's explore each attribute within the `creds.config` file:
   - APIAuthToken - A path to an encrypted file containing the API Authentication Token for the specified Rubrik Cluster. Creation of the encrypted file can be handled by running `"<rubrik_api_token>" | Export-CLIXML <path_to_store_token>`
 - GuestCredentials - An array of various credentials used to connect to the guest operating systems being tested. There is no limit on the amount of credentials you can configure
   - CredentialName - A unique name to assign to the credential (IE DomainAdministrator)
-  - Credentials - The path to an encrypted file contiaining the desired credentials. Creation of these credentials can be handled by running `Get-Credential | Export-CLIXML <path_to_credential_file>`
+  - Credentials - The path to an encrypted file containing the desired credentials. Creation of these credentials can be handled by running `Get-Credential | Export-CLIXML <path_to_credential_file>`
 
 #### Application Configuration (apps.config)
 
@@ -179,7 +179,7 @@ The `apps.config` file contains all of the information around which virtual mach
 ```
 Let's explore each attribute within the `apps.config` file:
 - generateReport - Specifies whether or not you would like to generate an HTML report summarizing the results of all tasks ran.
-- reportPath - A path to where you would like to store the outputed report
+- reportPath - A path to where you would like to store the outputted report
 - leaveLabRunning - Whether or not to leave the sandbox environment running once completed.
 - emailReport - Not yet implemented
 - virtualMachines - an array of virtual machines to process
@@ -219,7 +219,7 @@ Upon execution the following will occur:
 2. The specified vCenter is scanned to see if a router with the specified name has previously been deployed.
    1. If no router has been deployed a new one will be provisioned with a default configuration
 3. The routers configuration is compared to the passed router configuration
-   1. If changes are detected the old router will be decommisioned and a new one deployed in its' place
+   1. If changes are detected the old router will be decommissioned and a new one deployed in its' place
    2. The script will then configure the router based off the values provided within the router configuration file.
 4. The isolated networks are created within vCenter
 5. Rubrik Live Mounts will be performed based off of the information provided within the application configuration
