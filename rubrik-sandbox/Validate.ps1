@@ -941,6 +941,8 @@ $viserver = Connect-VIServer -Server $credcfg.VMware.vCenterServer -Credential (
 # Alright, let's now check to see if we have a router already!
 $router = Sync-Router
 
+
+
 # Connect to Rubrik
 Write-Verbose -Message "Connecting to Rubrik Cluster ($($credcfg.Rubrik.RubrikCluster))"
 $rubrikcluster = Connect-Rubrik -Server $credcfg.Rubrik.RubrikCluster -Token (Import-CLIxml $credcfg.Rubrik.APIAuthToken)
