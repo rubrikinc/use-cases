@@ -418,7 +418,7 @@ function New-Router() {
 
     # Change vyos password after initial configuration
     Write-Progress -Activity "Modifying vyos default password"
-    $data = '{"op": "set", "path": ["system", "login", "user", "vyos", "authentication", "plaintext-password","NewPass123!"]}'
+    $data = '{"op": "set", "path": ["system", "login", "user", "vyos", "authentication", "plaintext-password","'+$($routercfg.RouterPassword)+'"]}'
     $r = Invoke-VyOSRestcall  -Data $data -Endpoint "configure"
 
     Write-Verbose -Message "Configuring isolated networks within VMware"
