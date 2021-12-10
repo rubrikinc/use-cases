@@ -8,7 +8,6 @@ fi
 echo "[*] Entering configuration mode"
 configure
 
-set system login user vyos authentication plaintext-password RBKPASSWORD
 echo "[V] Configuration Interfaces"
 
 set interfaces ethernet eth0 address MANAGEMENT_IP_BITMASK

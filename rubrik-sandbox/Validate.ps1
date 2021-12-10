@@ -412,8 +412,14 @@ function New-Router() {
     Start-Sleep -Seconds 3
     Write-Progress -Activity "Deploying New Router: Modifing configuration permissions and executing script"
     Write-Verbose -Message "Changing initial configuration script permissions and executing"
+    Start-SLeep -Seconds 5
     Invoke-VMScript -VM $vm -ScriptText "chmod 777 /config/config-router-ready.sh" -ScriptType Bash -GuestUser vyos -GuestPassword vyos
     Invoke-VMScript -VM $vm -ScriptText "/config/config-router-ready.sh" -ScriptType Bash -GuestUser vyos -GuestPassword vyos
+
+    # Change vyos password after initial configuration
+    Write-Progress -Activity "Modifying vyos default password"
+    $data = '{"op": "set", "path": ["system", "login", "user", "vyos", "authentication", "plaintext-password","NewPass123!"]}'
+    $r = Invoke-VyOSRestcall  -Data $data -Endpoint "configure"
 
     Write-Verbose -Message "Configuring isolated networks within VMware"
     Write-Progress -Activity "Deploying New Router: Configuring the RubrikSandbox vSwitch"
